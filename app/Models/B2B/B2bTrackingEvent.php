@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Models\B2B;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+
+class B2bTrackingEvent extends Model
+{
+    protected $table = 'b2b_tracking_events';
+
+    protected $fillable = [
+        'shipment_id',
+        'container_id',
+        'event_type',
+        'location',
+        'event_status',
+        'planned_at',
+        'actual_at',
+        'source',
+        'description',
+        'evidence_attachment',
+        'created_by',
+    ];
+
+    protected $casts = [
+        'planned_at' => 'datetime',
+        'actual_at' => 'datetime',
+    ];
+
+    public function shipment()
+    {
+        return $this->belongsTo(B2bShipment::class, 'shipment_id');
+    }
+
+    public function container()
+    {
+        return $this->belongsTo(B2bContainer::class, 'container_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+}

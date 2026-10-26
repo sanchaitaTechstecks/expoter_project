@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class ProductRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        $rules = [];
+
+        $rules['name']          = 'required|max:255';
+        $rules['category_ids']  = 'required';
+        $rules['category_id']   = ['required', Rule::in($this->category_ids)];
+        $rules['unit']         = 'sometimes|required|regex:/^[A-Za-z\s]+$/';
+        $rules['min_qty']      = 'sometimes|required|numeric';
+        $rules['unit_price']    = 'sometimes|required|numeric|gt:0';
+        if ($this->get('discount_type') == 'amount') {
+            $rules['discount'] = 'nullable|numeric|lt:unit_price';
+        } else {
+            $rules['discount'] = 'nullable|numeric|lt:100';
+        }
+        $rules['current_stock'] = 'sometimes|required|numeric';
+        $rules['starting_bid']  = 'sometimes|required|numeric|min:1';
+        $rules['auction_date_range']  = 'sometimes|required';
+
+        $rules['prescription_required'] = 'nullable|boolean';
+        $rules['use_by_date']           = 'nullable|date|date_format:Y-m-d';
+
+        return $rules;
+    }
+
+
+    
+
+    /**
+     * Get the validation messages of rules that apply to the request.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        $messages = [
+            'name.required'             => translate('Product name is required'),
+            'category_ids.required'     => translate('Product category is required'),
+            'category_id.required'      => translate('Main Category is required'),
+            'category_id.in'            => translate('Main Category must be within selected categories'),
+            'unit.required'             => translate('Product unit is required'),
+            'unit.regex' => 'The unit may only contain letters and spaces.',
+            'min_qty.required'          => translate('Minimum purchase quantity is required'),
+            'min_qty.numeric'           => translate('Minimum purchase must be numeric'),
+            'unit_price.gt'             => translate('The unit price must be greater than 0'),
+            'unit_price.required'       => translate('Unit price is required'),
+            'unit_price.numeric'        => translate('Unit price must be numeric'),
+            'discount.required'         => translate('Discount is required'),
+            'discount.numeric'          => translate('Discount must be numeric'),
+            'discount.lt'               => translate('Discount should be less than unit price'),
+            'current_stock.required'    => translate('Current stock is required'),
+            'current_stock.numeric'     => translate('Current stock must be numeric'),
+            'starting_bid.required'     => translate('Starting Bid is required'),
+            'starting_bid.numeric'      => translate('Starting Bid must be numeric'),
+            'starting_bid.required'     => translate('Minimum Starting Bid is 1'),
+            'auction_date_range.required' => translate('Auction Date Range is required'),
+            'prescription_required.boolean' => translate('Prescription required must be true or false'),
+            'use_by_date.date'            => translate('Use by date must be a valid date'),
+            'use_by_date.date_format'     => translate('Use by date must be in YYYY-MM-DD format'),
+        ];
+
+        return $messages;
+    }
+
+}

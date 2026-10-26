@@ -1,0 +1,2161 @@
+{
+  "info": {
+    "_postman_id": "b2b-import-export-apis-v1",
+    "name": "B2B Import-Export Platform - Importer, Exporter, Admin & CHA APIs",
+    "description": "Comprehensive API collection for Importers, Exporters, Platform Administrators, and Customs House Agents based on SRS v1.0 (Section 3, 15 & 19 Delivered)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "importer_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exporter_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cha_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Importer (Buyer) APIs",
+      "item": [
+        {
+          "name": "Auth - Register Importer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"EuroFoods Import GmbH\",\n  \"email\": \"buyer@eurofoods.de\",\n  \"password\": \"secret123\",\n  \"password_confirmation\": \"secret123\",\n  \"phone\": \"+4915123456789\",\n  \"company_name\": \"EuroFoods Import GmbH\",\n  \"country\": \"Germany\",\n  \"iec_code\": \"DE987654321\",\n  \"tax_number\": \"DE123456789\",\n  \"trade_type\": \"international\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Auth - Login Importer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@eurofoods.de\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marketplace - Browse Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/products?search=&category_id=&trade_type=international",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marketplace - Product Details with Lots",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/products/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "products",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "RFQ - Submit RFQ (Enquiry)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"preferred_lot_ids\": [1],\n  \"requested_quantity\": 20,\n  \"unit\": \"MT\",\n  \"target_price\": 960,\n  \"quality_specification\": \"Moisture < 12%, Grain length > 8.35mm\",\n  \"packaging_requirement\": \"25kg PP Bags with custom private labelling\",\n  \"trade_type\": \"international\",\n  \"destination_country\": \"Germany\",\n  \"destination_port_or_address\": \"Port of Hamburg\",\n  \"incoterm\": \"CIF\",\n  \"currency\": \"USD\",\n  \"required_documents\": [\"Phytosanitary Certificate\", \"Certificate of Origin\", \"Bill of Lading\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/rfqs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "rfqs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "RFQ - List Buyer RFQs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/rfqs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "rfqs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Quotations - List Received",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/quotations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "quotations"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Quotations - Accept Quotation (Creates Confirmed Order)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/quotations/1/accept",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "quotations",
+                "1",
+                "accept"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Orders - List Confirmed Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "orders"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Agreements - Sign Trade Agreement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"signature\": \"Dr. Klaus Mueller (Managing Director)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/agreements/1/sign",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "agreements",
+                "1",
+                "sign"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Payments - Submit Payment with Proof",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "amount",
+                  "value": "6120",
+                  "type": "text"
+                },
+                {
+                  "key": "currency",
+                  "value": "USD",
+                  "type": "text"
+                },
+                {
+                  "key": "payment_type",
+                  "value": "advance",
+                  "type": "text"
+                },
+                {
+                  "key": "payment_method",
+                  "value": "bank_transfer",
+                  "type": "text"
+                },
+                {
+                  "key": "transaction_reference",
+                  "value": "SWIFT-2026-9901",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/payments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "payments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Shipments - Track Shipment & Milestones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{importer_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/importer/shipments/1/track",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "importer",
+                "shipments",
+                "1",
+                "track"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exporter (Supplier) APIs",
+      "item": [
+        {
+          "name": "Auth - Register Exporter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Global Agro Exports Ltd\",\n  \"email\": \"export@globalagro.in\",\n  \"password\": \"secret123\",\n  \"password_confirmation\": \"secret123\",\n  \"phone\": \"+919876543210\",\n  \"company_name\": \"Global Agro Exports Ltd\",\n  \"country\": \"India\",\n  \"iec_code\": \"IEC0123456789\",\n  \"tax_number\": \"27AAACG0123M1Z5\",\n  \"trade_type\": \"international\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Auth - Login Exporter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"export@globalagro.in\",\n  \"password\": \"secret123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Catalogue - Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic Basmati Rice 1121\",\n  \"category_id\": 1,\n  \"grade\": \"Extra Long Grain AAA\",\n  \"origin_country\": \"India\",\n  \"unit\": \"MT\",\n  \"packaging_type\": \"25kg PP Bags\",\n  \"specifications\": \"Moisture < 12%, Grain length > 8.35mm, Purity 98%\",\n  \"domestic_visibility\": true,\n  \"export_visibility\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lots - Create Product Lot (BR-001)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"warehouse_location\": \"Kandla Port Warehouse Bay 4\",\n  \"quality_grade\": \"Grade A Premium\",\n  \"quantity\": 100,\n  \"unit\": \"MT\",\n  \"unit_price\": 950.00,\n  \"currency\": \"USD\",\n  \"incoterm\": \"FOB\",\n  \"named_place\": \"Port of Kandla, India\",\n  \"packaging_details\": \"25kg Vacuum Bags on Pallets\",\n  \"manufacture_or_harvest_date\": \"2026-09-01\",\n  \"expiry_date\": \"2028-09-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/lots",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "lots"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lots - Update Lot Price with Audit (BR-002)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_price\": 980.00,\n  \"currency\": \"USD\",\n  \"reason\": \"Market price hike for Q4\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/lots/1/price",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "lots",
+                "1",
+                "price"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lots - Stock Adjustment (BR-003)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adjustment_type\": \"add\",\n  \"quantity\": 25,\n  \"reason\": \"Warehouse inventory reconciliation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/lots/1/stock-adjust",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "lots",
+                "1",
+                "stock-adjust"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Quotations - Issue Quotation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfq_id\": 1,\n  \"currency\": \"USD\",\n  \"incoterm\": \"CIF\",\n  \"named_place\": \"Port of Hamburg\",\n  \"validity_date\": \"2026-11-15 00:00:00\",\n  \"delivery_window\": \"4 weeks from contract\",\n  \"payment_terms\": \"30% Advance, 70% against B/L copy\",\n  \"freight_charges\": 800,\n  \"insurance_charges\": 200,\n  \"discount\": 100,\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"lot_id\": 1,\n      \"quantity\": 20,\n      \"unit\": \"MT\",\n      \"unit_price\": 975,\n      \"packaging\": \"25kg PP Bags on Pallets\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/quotations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "quotations"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invoices - Issue Proforma Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": 1,\n  \"invoice_type\": \"proforma\",\n  \"issue_date\": \"2026-10-22\",\n  \"due_date\": \"2026-10-29\",\n  \"payment_terms\": \"30% Advance ($6,120) upon PI receipt\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/invoices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "invoices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Payments - Verify Payment Proof (BR-006)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"paid\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/payments/1/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "payments",
+                "1",
+                "verify"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Trade Documents - Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "order_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "document_type",
+                  "value": "phytosanitary_certificate",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "Phytosanitary Health Certificate",
+                  "type": "text"
+                },
+                {
+                  "key": "document_number",
+                  "value": "PHYTO-2026-8801",
+                  "type": "text"
+                },
+                {
+                  "key": "issuer",
+                  "value": "Plant Quarantine Organization of India",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/documents/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "documents",
+                "upload"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Shipments - Create Shipment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": 1,\n  \"mode\": \"sea\",\n  \"carrier_name\": \"Maersk Line\",\n  \"booking_reference\": \"MSK-HAM-2026-8812\",\n  \"tracking_number\": \"TRK-987654321\",\n  \"vessel_name\": \"Maersk Mc-Kinney Moller\",\n  \"voyage_number\": \"V-2609\",\n  \"origin_port\": \"Port of Kandla, India\",\n  \"destination_port\": \"Port of Hamburg, Germany\",\n  \"departure_date\": \"2026-10-25\",\n  \"estimated_arrival\": \"2026-11-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/shipments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "shipments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Shipments - Add Container",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"container_number\": \"MSKU9021841\",\n  \"container_type\": \"20FT\",\n  \"seal_number\": \"SEAL-IND-88219\",\n  \"loaded_quantity\": 20,\n  \"unit\": \"MT\",\n  \"gross_weight\": 21.5,\n  \"net_weight\": 20.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/shipments/1/containers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "shipments",
+                "1",
+                "containers"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Shipments - Log Tracking Event Milestone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{exporter_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_type\": \"loaded_onto_vessel\",\n  \"location\": \"Port of Kandla Terminal Berth 3\",\n  \"event_status\": \"completed\",\n  \"source\": \"manual\",\n  \"description\": \"Container loaded onto vessel Maersk Mc-Kinney Moller\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/exporter/shipments/1/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "exporter",
+                "shipments",
+                "1",
+                "events"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Panel & Moderation APIs",
+      "item": [
+        {
+          "name": "1. Admin Auth - Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@tradeplatform.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Admin Auth - Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Admin Auth - Update Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Senior Administrator\",\n  \"phone\": \"+1999888777\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Admin Auth - Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Staff - List Users & Staff",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users?role=sub_admin&status=active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "sub_admin"
+                },
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Staff - Create Staff User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Logistics Operations Lead\",\n  \"email\": \"ops_mod@tradeplatform.com\",\n  \"password\": \"Secr3tPassword!\",\n  \"phone\": \"+1234567890\",\n  \"admin_role\": \"sub_admin\",\n  \"admin_permissions\": [\n    \"suppliers\",\n    \"disputes\",\n    \"lots\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Staff - Update User Account Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"suspended\",\n  \"reason\": \"Audit review on suspicious quotation behavior\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/1/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "1",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Suppliers - Verification Queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/suppliers?status=pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "suppliers"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9. Suppliers - Supplier KYC Dossier",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/suppliers/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "suppliers",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Suppliers - Verify / Reject Supplier",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"verified\",\n  \"notes\": \"IEC and Tax certificates validated against government portal.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/suppliers/1/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "suppliers",
+                "1",
+                "verify"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Products - Moderation List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/products?status=pending_approval",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending_approval"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. Products - Approve or Reject Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\",\n  \"notes\": \"Approved for international trade marketplace catalog.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/products/1/approval",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "products",
+                "1",
+                "approval"
+              ]
+            }
+          }
+        },
+        {
+          "name": "13. Lots - Pending Pricing Approval Queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/lots/pending-approval",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "lots",
+                "pending-approval"
+              ]
+            }
+          }
+        },
+        {
+          "name": "14. Lots - Approve / Reject Lot Price Change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approved\",\n  \"notes\": \"Price adjustment verified against benchmark indices.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/lots/1/approval",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "lots",
+                "1",
+                "approval"
+              ]
+            }
+          }
+        },
+        {
+          "name": "15. Categories - Master Hierarchy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "16. Categories - Create Master Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic Spices\",\n  \"parent_id\": 0,\n  \"hs_code\": \"0910.00.00\",\n  \"standard_duty_rate\": 7.5,\n  \"order_level\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "17. Categories - Update Category Master",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic Spices & Natural Extracts\",\n  \"standard_duty_rate\": 8.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/categories/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "categories",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "18. Categories - Delete Category Master",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/categories/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "categories",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "19. HS Codes - Master Repository List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/hs-codes?search=Cardamom",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "hs-codes"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Cardamom"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "20. HS Codes - Create / Update HS Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hs_code\": \"0908.31.00\",\n  \"description\": \"Cardamom (neither crushed nor ground)\",\n  \"basic_customs_duty_pct\": 30.0,\n  \"igst_pct\": 5.0,\n  \"cess_pct\": 1.0,\n  \"policy_status\": \"free\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/hs-codes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "hs-codes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "21. Disputes - List Order Disputes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes?status=opened",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "disputes"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "opened"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "22. Disputes - Dispute Dossier & Evidence",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "disputes",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "23. Disputes - Arbitrate & Resolve Dispute",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"partial_refund\",\n  \"settlement_amount\": 4500.0,\n  \"resolution_notes\": \"Surveyor certificate confirms partial moisture ingress. Supplier reimbursed ,500.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/disputes/1/resolve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "disputes",
+                "1",
+                "resolve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "24. Audit - Filterable System Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/audit-logs?action=pricing_approval&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "pricing_approval"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "25. Audit - Audit Log Detail & State Diff",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/audit-logs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "audit-logs",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CHA (Customs House Agent) Portal APIs",
+      "item": [
+        {
+          "name": "1. CHA Auth - Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cha@customsbroker.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. CHA Auth - Profile & Workload",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. CHA Auth - Update Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premier Maritime Brokers Ltd\",\n  \"phone\": \"+919876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. CHA Auth - Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Shipments - Customs Queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/shipments?customs_status=pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "shipments"
+              ],
+              "query": [
+                {
+                  "key": "customs_status",
+                  "value": "pending"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Shipments - Customs Clearance Dossier",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/shipments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "shipments",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Shipments - Customs Document Checklist",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/shipments/1/checklist",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "shipments",
+                "1",
+                "checklist"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Shipments - Record Customs Filing (Shipping Bill / BE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"declaration_number\": \"SB-2026-987654\",\n  \"filing_type\": \"shipping_bill\",\n  \"port_code\": \"INNSA1\",\n  \"filing_date\": \"2026-10-26\",\n  \"cha_license_number\": \"CHA-LIC-MUM-8821\",\n  \"iec_code\": \"IEC0123456789\",\n  \"assessable_value\": 45000.0,\n  \"currency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/shipments/1/filing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "shipments",
+                "1",
+                "filing"
+              ]
+            }
+          }
+        },
+        {
+          "name": "9. Shipments - Record Duty Calculation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assessable_value\": 45000.0,\n  \"basic_customs_duty\": 2250.0,\n  \"igst_amount\": 2250.0,\n  \"cess_amount\": 225.0,\n  \"duty_payment_status\": \"paid\",\n  \"duty_challan_number\": \"ICEGATE-CHAL-998811\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/shipments/1/duty-calculation",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "shipments",
+                "1",
+                "duty-calculation"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Shipments - Record Examination / Query / Hold",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"examination_status\": \"passed\",\n  \"examination_remarks\": \"Physical package examination verified without discrepancies.\",\n  \"examination_officer\": \"Appraising Officer R. Sharma\",\n  \"examination_order_no\": \"EXAM-ORD-1120\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/shipments/1/examination",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "shipments",
+                "1",
+                "examination"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Shipments - Customs Clearance Release (LEO / OOC)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cha_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"release_order_number\": \"LEO-2026-INNSA1-99881\",\n  \"release_notes\": \"Let Export Order granted by customs superintendent. Consignment cleared for vessel loading.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cha/shipments/1/release",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cha",
+                "shipments",
+                "1",
+                "release"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
