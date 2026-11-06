@@ -36,6 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(ImporterRfqController::class)->group(function () {
         Route::get('rfqs', 'index');
         Route::post('rfqs', 'store');
+        Route::post('rfqs/{id}/save-draft', 'saveDraft');
+        Route::post('rfqs/{id}/assign', 'assign');
         Route::get('rfqs/{id}', 'show');
         Route::post('rfqs/{id}/messages', 'sendMessage');
         Route::post('rfqs/{id}/cancel', 'cancel');
@@ -47,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('quotations/{id}', 'show');
         Route::post('quotations/{id}/accept', 'accept');
         Route::post('quotations/{id}/reject', 'reject');
+        Route::post('quotations/{id}/draft', 'saveDraft');
     });
 
     // Confirmed B2B Orders

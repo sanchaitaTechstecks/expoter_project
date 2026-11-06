@@ -36,6 +36,17 @@ class Rfq extends Model
         'attachments',
         'status',
         'assigned_to',
+        'assigned_by',
+        'assigned_at',
+        'draft_saved_at',
+        'draft_notes',
+        'rfq_type',
+        'source_channel',
+        'dec013_export_offers',
+        'dec013_external_id',
+        'offer_count',
+        'offer_by_supplier',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -44,6 +55,11 @@ class Rfq extends Model
         'attachments' => 'array',
         'requested_quantity' => 'decimal:3',
         'target_price' => 'decimal:2',
+        'assigned_at' => 'datetime',
+        'assigned_by' => 'integer',
+        'draft_saved_at' => 'datetime',
+        'offer_count' => 'integer',
+        'offer_by_supplier' => 'integer',
     ];
 
     public function buyer()

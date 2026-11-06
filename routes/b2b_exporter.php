@@ -49,12 +49,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('rfqs', 'index');
         Route::get('rfqs/{id}', 'show');
         Route::post('rfqs/{id}/messages', 'sendMessage');
+        Route::post('rfqs/{id}/offers', 'addOffers');
     });
 
     // Quotations Drafting & Management
     Route::controller(ExporterQuotationController::class)->group(function () {
         Route::get('quotations', 'index');
         Route::post('quotations', 'store');
+        Route::post('quotations/{id}/draft', 'saveDraft');
         Route::get('quotations/{id}', 'show');
         Route::post('quotations/{id}/revise', 'revise');
     });

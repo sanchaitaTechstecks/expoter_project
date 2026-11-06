@@ -35,6 +35,8 @@ class ExporterLotController extends B2bBaseController
             'product_id' => 'required|exists:products,id',
             'warehouse_location' => 'required|string|max:191',
             'quality_grade' => 'required|string|max:100',
+            'destination_eligibility' => 'nullable|array',
+            'destination_eligibility.*' => 'string|max:100',
             'quantity' => 'required|numeric|min:0.001',
             'unit' => 'required|string|max:20',
             'unit_price' => 'required|numeric|min:0.01',
@@ -69,6 +71,7 @@ class ExporterLotController extends B2bBaseController
                 'supplier_id' => $user->id,
                 'warehouse_location' => $request->warehouse_location,
                 'quality_grade' => $request->quality_grade,
+                'destination_eligibility' => $this->normalizeDestinations($request->destination_eligibility),
                 'inspection_status' => 'inspected',
                 'quantity_received' => $request->quantity,
                 'quantity_reserved' => 0,
@@ -117,6 +120,19 @@ class ExporterLotController extends B2bBaseController
 
             return $this->successResponse($lot, 'Product lot created successfully with independent pricing and stock', 201);
         });
+    }
+
+    private function normalizeDestinations($destinations): ?array
+    {
+        if (!is_array($destinations)) {
+            return null;
+        }
+
+        $normalized = array_values(array_unique(array_filter(array_map(function ($country) {
+            return is_string($country) ? trim($country) : '';
+        }, $destinations))));
+
+        return empty($normalized) ? null : $normalized;
     }
 
     /**

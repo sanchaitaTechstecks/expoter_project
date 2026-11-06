@@ -158,6 +158,64 @@ class ExporterQuotationController extends B2bBaseController
     }
 
     /**
+     * Save / update a quotation draft (status => draft).
+     */
+    public function saveDraft($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $quotation = B2bQuotation::where('supplier_id', $user->id)->find($id);
+
+        if (!$quotation) {
+            return $this->errorResponse('Quotation not found or access denied', 404);
+        }
+
+        if (in_array($quotation->status, ['accepted', 'rejected', 'expired', 'superseded', 'cancelled'])) {
+            return $this->errorResponse("Cannot save a quote in '{$quotation->status}' state", 400);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'rfq_id' => 'required|exists:rfqs,id',
+            'currency' => 'nullable|string|max:10',
+            'incoterm' => 'nullable|string|max:20', // FOB, CIF, CFR, EXW
+            'named_place' => 'nullable|string|max:191',
+            'validity_date' => 'nullable|date|after:now',
+            'delivery_window' => 'nullable|string|max:100',
+            'payment_terms' => 'nullable|string',
+            'discount' => 'nullable|numeric|min:0',
+            'tax' => 'nullable|numeric|min:0',
+            'freight_charges' => 'nullable|numeric|min:0',
+            'insurance_charges' => 'nullable|numeric|min:0',
+            'other_charges' => 'nullable|numeric|min:0',
+            'exclusions' => 'nullable|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $quotation->fill([
+            'currency' => $request->currency ?? $quotation->currency,
+            'incoterm' => $request->incoterm ?? $quotation->incoterm,
+            'named_place' => $request->named_place ?? $quotation->named_place,
+            'validity_date' => $request->validity_date ?? $quotation->validity_date,
+            'delivery_window' => $request->delivery_window ?? $quotation->delivery_window,
+            'payment_terms' => $request->payment_terms ?? $quotation->payment_terms,
+            'discount' => $request->discount ?? $quotation->discount,
+            'tax' => $request->tax ?? $quotation->tax,
+            'freight_charges' => $request->freight_charges ?? $quotation->freight_charges,
+            'insurance_charges' => $request->insurance_charges ?? $quotation->insurance_charges,
+            'other_charges' => $request->other_charges ?? $quotation->other_charges,
+            'exclusions' => $request->exclusions ?? $quotation->exclusions,
+            'notes' => $request->notes ?? $quotation->notes,
+        ]);
+        $quotation->status = 'draft';
+        $quotation->save();
+
+        return $this->successResponse($quotation, 'Quotation draft saved successfully', 200);
+    }
+
+    /**
      * Revise an existing quotation (creates a new version and supersedes the old one).
      */
     public function revise($id, Request $request): JsonResponse

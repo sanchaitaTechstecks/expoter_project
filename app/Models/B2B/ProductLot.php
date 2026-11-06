@@ -19,6 +19,7 @@ class ProductLot extends Model
         'supplier_id',
         'warehouse_location',
         'quality_grade',
+        'destination_eligibility',
         'inspection_status',
         'quantity_received',
         'quantity_reserved',
@@ -47,6 +48,7 @@ class ProductLot extends Model
     protected $casts = [
         'certificates' => 'array',
         'photos' => 'array',
+        'destination_eligibility' => 'array',
         'quantity_received' => 'decimal:3',
         'quantity_reserved' => 'decimal:3',
         'quantity_dispatched' => 'decimal:3',
