@@ -84,9 +84,8 @@ class ImporterMarketplaceController extends B2bBaseController
         $filters = $this->filledFilters($validator->validated());
         $lotConstraint = $this->lotConstraint($filters);
 
-        $query = Product::query()
-            ->where('published', 1)
-            ->where('publication_status', 'active');
+        $query = Product::query()->where('published', 1)
+                                 ->where('publication_status', 'active');
 
         if (isset($filters['search'])) {
             $search = $filters['search'];
@@ -161,6 +160,7 @@ class ImporterMarketplaceController extends B2bBaseController
         }
 
         $product = Product::query()
+           ->where('id', $id)
             ->where('published', 1)
             ->where('publication_status', 'active')
             ->with([
@@ -302,39 +302,49 @@ class ImporterMarketplaceController extends B2bBaseController
 
         return function ($query) use ($filters) {
             if (array_key_exists('min_price', $filters)) {
-                $query->where('unit_price', '>=', $filters['min_price']);
+                $query->where('unit_price', '>=', $filters['min_price'])->where('lot_status','active')
+                                                                        ->where('approval_status','approved');
             }
 
             if (array_key_exists('max_price', $filters)) {
-                $query->where('unit_price', '<=', $filters['max_price']);
+                $query->where('unit_price', '<=', $filters['max_price'])->where('lot_status','active')
+                                                                                  ->where('approval_status','approved');
             }
 
             if (array_key_exists('min_quantity', $filters)) {
-                $query->where('quantity_available', '>=', $filters['min_quantity']);
+                $query->where('quantity_available', '=', $filters['min_quantity'])->where('lot_status','active')
+                                                                                  ->where('approval_status','approved');
             }
 
             if (array_key_exists('grade', $filters)) {
-                $query->whereRaw('LOWER(quality_grade) = ?', [mb_strtolower($filters['grade'])]);
+                $query->whereRaw('LOWER(quality_grade) = ?', [mb_strtolower($filters['grade'])])->where('lot_status','active')
+                                                                                                 ->where('approval_status','approved');
             }
 
             if (array_key_exists('unit', $filters)) {
-                $query->whereRaw('LOWER(unit) = ?', [mb_strtolower($filters['unit'])]);
+                $query->whereRaw('LOWER(unit) = ?', [mb_strtolower($filters['unit'])])->where('lot_status','active')->where('approval_status','approved');
             }
 
             if (array_key_exists('supplier_id', $filters)) {
-                $query->where('supplier_id', $filters['supplier_id']);
+                $query->where('supplier_id', $filters['supplier_id'])->where('lot_status','active')->where('approval_status','approved');
             }
 
-            if (array_key_exists('destination_country', $filters)) {
-                // Matches an element of the JSON array case-insensitively.
-                // NULL or [] means the lot has no destination restriction.
-                $pattern = '%"' . addcslashes(mb_strtolower($filters['destination_country']), '\\%_') . '"%';
+            // if (array_key_exists('destination_country', $filters)) {
+            //     // Matches an element of the JSON array case-insensitively.
+            //     // NULL or [] means the lot has no destination restriction.
+            //     $pattern = '%"' . addcslashes(mb_strtolower($filters['destination_country']), '\\%_') . '"%';
 
-                $query->where(function ($destinationQuery) use ($pattern) {
-                    $destinationQuery->whereNull('destination_eligibility')
-                        ->orWhere('destination_eligibility', '[]')
-                        ->orWhereRaw('LOWER(destination_eligibility) LIKE ?', [$pattern]);
-                });
+            //     $query->where(function ($destinationQuery) use ($pattern) {
+            //         $destinationQuery->whereNull('destination_eligibility')
+            //             ->orWhere('destination_eligibility', '[]')
+            //             ->orWhereRaw('LOWER(destination_eligibility) LIKE ?', [$pattern]);
+            //     });
+            // }
+            if (array_key_exists('destination_country', $filters)) {
+                $query->whereJsonContains(
+                    'destination_eligibility',
+                    $filters['destination_country']
+                )->where('lot_status','active')->where('approval_status','approved');
             }
         };
     }

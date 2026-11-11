@@ -27,12 +27,20 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'verification_status', 'user_type', 'admin_role', 'admin_permissions', 'banned'
+        'name', 'email', 'password', 'address', 'city', 'postal_code', 'phone', 'country', 'provider_id', 'email_verified_at', 'verification_code', 'verification_status', 'user_type', 'admin_role', 'admin_permissions', 'banned', 'two_factor_secret', 'two_factor_enabled', 'two_factor_confirmed_at', 'last_login_at', 'last_activity_at'
     ];
 
     protected $casts = [
         'admin_permissions' => 'array',
         'banned' => 'integer',
+        'two_factor_enabled' => 'boolean',
+        'two_factor_confirmed_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'last_activity_at' => 'datetime',
+    ];
+
+    protected $hidden = [
+        'password', 'remember_token', 'two_factor_secret',
     ];
 
     /**
@@ -40,9 +48,6 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array
      */
-    protected $hidden = [
-        'password', 'remember_token',
-    ];
 
     public function wishlists()
     {

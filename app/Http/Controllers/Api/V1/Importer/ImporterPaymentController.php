@@ -49,6 +49,10 @@ class ImporterPaymentController extends B2bBaseController
             'payment_method' => 'required|in:bank_transfer,letter_of_credit,online,cheque,other',
             'transaction_reference' => 'required|string|max:191',
             'proof_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // max 10MB
+            'exchange_rate' => 'nullable|numeric|min:0.00000001',
+            'base_currency' => 'nullable|string|max:10',
+            'transaction_at' => 'nullable|date',
+            'due_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
 
@@ -69,6 +73,10 @@ class ImporterPaymentController extends B2bBaseController
 
         $paymentNumber = 'PAY-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
 
+        // P2-7: capture FX details so multi-currency payments can be reconciled.
+        $exchangeRate = $request->filled('exchange_rate') ? (float) $request->exchange_rate : null;
+        $baseCurrency = $request->filled('base_currency') ? strtoupper($request->base_currency) : null;
+
         $payment = B2bPayment::create([
             'payment_number' => $paymentNumber,
             'order_id' => $order->id,
@@ -76,12 +84,18 @@ class ImporterPaymentController extends B2bBaseController
             'buyer_id' => $user->id,
             'supplier_id' => $order->supplier_id,
             'amount' => $request->amount,
-            'currency' => $request->currency,
+            'currency' => strtoupper($request->currency),
+            'exchange_rate' => $exchangeRate,
+            'base_currency' => $baseCurrency,
+            'base_amount' => $exchangeRate ? round((float) $request->amount * $exchangeRate, 2) : null,
+            'transaction_at' => $request->transaction_at ?: now(),
             'payment_type' => $request->payment_type,
             'payment_method' => $request->payment_method,
             'transaction_reference' => $request->transaction_reference,
             'proof_file' => $proofFilePath,
+            'due_date' => $request->due_date,
             'initiated_at' => now(),
+            'reconciliation_status' => 'pending',
             'status' => 'verification_required', // BR-006: proof upload alone does not mark funds received
             'notes' => $request->notes,
         ]);

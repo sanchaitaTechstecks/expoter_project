@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Importer;
 
 use App\Http\Controllers\Api\V1\B2bBaseController;
 use App\Models\B2B\Rfq;
+use App\Models\B2B\RfqInvitation;
 use App\Models\B2B\RfqMessage;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
@@ -56,12 +57,13 @@ class ImporterRfqController extends B2bBaseController
             return $this->errorResponse('Product not found', 404);
         }
 
-        // If supplier not specified, assign to the product's owner/supplier
+        // If supplier not specified, assign to the product's owner/supplier.
+        // A buyer may always raise an RFQ against another seller's product; the
+        // supplier is the product owner unless an explicit supplier was chosen.
         $supplierId = $request->supplier_id ?: $product->user_id;
 
-        // Only the product owner can set supplier_id directly; draft may omit it
-        if ($supplierId && $supplierId != $user->id && $product->user_id != $user->id) {
-            return $this->errorResponse('Access denied: you can only create an RFQ for your own products', 403);
+        if ($request->filled('supplier_id') && (int) $supplierId === (int) $user->id) {
+            return $this->errorResponse('You cannot raise an RFQ to yourself', 422);
         }
 
         $rfqNumber = 'RFQ-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
@@ -101,7 +103,6 @@ class ImporterRfqController extends B2bBaseController
             'offer_count' => $request->offer_count ?? 0,
             'offer_by_supplier' => $request->offer_by_supplier ?? 0,
             'rejection_reason' => $request->rejection_reason,
-            'created_by' => $user->id,
         ]);
 
         return $this->successResponse($rfq->load('product'), 'RFQ submitted successfully', 201);
@@ -326,5 +327,86 @@ class ImporterRfqController extends B2bBaseController
         $rfq->save();
 
         return $this->successResponse($rfq, 'RFQ closed successfully');
+    }
+
+    /**
+     * P2-2: Broadcast an RFQ to multiple suppliers at once.
+     */
+    public function broadcast($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'supplier_ids' => 'required|array|min:1|max:50',
+            'supplier_ids.*' => 'integer|exists:users,id',
+            'message' => 'nullable|string|max:2000',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $rfq = Rfq::where('buyer_id', $user->id)->find($id);
+        if (!$rfq) {
+            return $this->errorResponse('RFQ not found or access denied', 404);
+        }
+
+        if (in_array($rfq->status, ['converted', 'closed', 'cancelled', 'rejected'], true)) {
+            return $this->errorResponse("Cannot broadcast RFQ in '{$rfq->status}' state", 400);
+        }
+
+        $created = [];
+        foreach (array_unique($request->supplier_ids) as $supplierId) {
+            $invitation = RfqInvitation::firstOrCreate(
+                ['rfq_id' => $rfq->id, 'supplier_id' => $supplierId],
+                ['status' => 'invited']
+            );
+            $created[] = $invitation->supplier_id;
+        }
+
+        if ($request->filled('message')) {
+            RfqMessage::create([
+                'rfq_id' => $rfq->id,
+                'sender_id' => $user->id,
+                'message' => $request->message,
+                'attachments' => null,
+            ]);
+        }
+
+        return $this->successResponse([
+            'rfq' => $rfq->fresh()->load('invitations.supplier'),
+            'invited_supplier_ids' => array_values($created),
+            'invitation_count' => $rfq->invitations()->count(),
+        ], 'RFQ broadcast to suppliers successfully');
+    }
+
+    /**
+     * P2-2: Broadcast responses so the buyer can track who answered.
+     */
+    public function invitationStatus($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $rfq = Rfq::where('buyer_id', $user->id)->find($id);
+
+        if (!$rfq) {
+            return $this->errorResponse('RFQ not found or access denied', 404);
+        }
+
+        $invitations = $rfq->invitations()
+            ->with('supplier:id,name,email')
+            ->orderBy('id')
+            ->get();
+
+        return $this->successResponse([
+            'rfq_id' => $rfq->id,
+            'summary' => [
+                'total' => $invitations->count(),
+                'invited' => $invitations->where('status', 'invited')->count(),
+                'viewed' => $invitations->where('status', 'viewed')->count(),
+                'responded' => $invitations->where('status', 'responded')->count(),
+                'declined' => $invitations->where('status', 'declined')->count(),
+            ],
+            'invitations' => $invitations,
+        ], 'RFQ invitations retrieved successfully');
     }
 }

@@ -84,6 +84,14 @@ class B2bTradeWorkflowTest extends TestCase
         $prodResp->assertStatus(201);
         $productId = $prodResp->json('data.id');
 
+        // DEC-002: a new product starts as pending_approval, so the marketplace hides it until an
+        // admin approves it (that moderation flow is covered by B2bP3ProductManagementTest).
+        Product::where('id', $productId)->update([
+            'approved' => 1,
+            'published' => 1,
+            'publication_status' => 'active',
+        ]);
+
         // 4. Exporter creates a Product Lot with independent pricing & stock (BR-001)
         $lotResp = $this->withHeaders($exporterHeaders)->postJson('/api/v1/exporter/lots', [
             'product_id' => $productId,

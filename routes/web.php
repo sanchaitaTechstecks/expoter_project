@@ -1,5 +1,6 @@
 <?php
-
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AizUploadController;
 use App\Http\Controllers\Auth\LoginController;
@@ -52,6 +53,8 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\SizeChartController;
+// temporary add
+use App\Http\Controllers\AIController;
 
 /*
   |--------------------------------------------------------------------------
@@ -517,7 +520,40 @@ Route::controller(BlogController::class)->group(function () {
 
 });
 
+// Dhal temporary
+Route::post('/ai/chat', [AIController::class, 'chat'])->name('ai.chat');
+    
+Route::get('/test-deepseek', function () {
+
+    $response = Http::withToken(config('services.dahl.api_key'))
+        ->timeout(60)
+        ->post(config('services.dahl.base_url') . '/chat/completions', [
+            'model' => config('services.dahl.model'),
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => 'Hello DeepSeek! Introduce yourself briefly.'
+                ]
+            ],
+        ]);
+
+    if ($response->failed()) {
+        return response()->json([
+            'success' => false,
+            'status' => $response->status(),
+            'error' => $response->json(),
+        ], $response->status());
+    }
+
+    return response()->json([
+        'success' => true,
+        'model' => $response->json('model'),
+        'reply' => $response->json('choices.0.message.content'),
+    ]);
+});
+
 Route::controller(PageController::class)->group(function () {
+    
     //mobile app balnk page for webview
     Route::get('/mobile-page/{slug}', 'mobile_custom_page')->name('mobile.custom-pages');
 

@@ -19,6 +19,7 @@ class Product extends Model
     protected $casts = [
         'prescription_required' => 'boolean',
         'use_by_date' => 'date:Y-m-d',
+        'archived_at' => 'datetime',
     ];
 
     public function getTranslation($field = '', $lang = false)

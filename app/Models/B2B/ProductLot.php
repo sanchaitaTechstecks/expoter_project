@@ -25,6 +25,7 @@ class ProductLot extends Model
         'quantity_reserved',
         'quantity_dispatched',
         'quantity_available',
+        'low_stock_threshold',
         'unit',
         'unit_price',
         'currency',
@@ -53,6 +54,7 @@ class ProductLot extends Model
         'quantity_reserved' => 'decimal:3',
         'quantity_dispatched' => 'decimal:3',
         'quantity_available' => 'decimal:3',
+        'low_stock_threshold' => 'decimal:3',
         'unit_price' => 'decimal:2',
         'domestic_price' => 'decimal:2',
         'export_price' => 'decimal:2',
@@ -80,5 +82,47 @@ class ProductLot extends Model
     public function inventoryMovements()
     {
         return $this->hasMany(InventoryMovement::class, 'lot_id');
+    }
+
+    /**
+     * Shelf-life ageing (P2-4): days remaining / elapsed and an ageing bucket.
+     */
+    public function getShelfLifeAttribute(): array
+    {
+        if (!$this->expiry_date) {
+            return [
+                'has_expiry' => false,
+                'days_remaining' => null,
+                'days_since_harvest' => null,
+                'ageing_bucket' => 'not_tracked',
+            ];
+        }
+
+        $daysRemaining = (int) now()->startOfDay()->diffInDays($this->expiry_date, false);
+        $shelfLifeDays = $this->manufacture_or_harvest_date
+            ? (int) $this->manufacture_or_harvest_date->diffInDays($this->expiry_date)
+            : null;
+        $elapsed = $this->manufacture_or_harvest_date
+            ? (int) $this->manufacture_or_harvest_date->diffInDays(now()->startOfDay())
+            : null;
+
+        if ($daysRemaining < 0) {
+            $bucket = 'expired';
+        } elseif ($daysRemaining <= 30) {
+            $bucket = 'critical';
+        } elseif ($daysRemaining <= 90) {
+            $bucket = 'aging';
+        } else {
+            $bucket = 'fresh';
+        }
+
+        return [
+            'has_expiry' => true,
+            'shelf_life_days' => $shelfLifeDays,
+            'days_since_harvest' => $elapsed,
+            'days_remaining' => $daysRemaining,
+            'pct_elapsed' => $shelfLifeDays ? round(min(100, max(0, ($elapsed / $shelfLifeDays) * 100)), 2) : null,
+            'ageing_bucket' => $bucket,
+        ];
     }
 }

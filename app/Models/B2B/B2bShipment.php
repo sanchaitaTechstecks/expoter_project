@@ -64,6 +64,16 @@ class B2bShipment extends Model
         return $this->hasMany(B2bContainer::class, 'shipment_id');
     }
 
+    public function etaRevisions()
+    {
+        return $this->hasMany(B2bShipmentEtaRevision::class, 'shipment_id')->orderByDesc('id');
+    }
+
+    public function vehicles()
+    {
+        return $this->hasMany(B2bShipmentVehicle::class, 'shipment_id');
+    }
+
     public function trackingEvents()
     {
         return $this->hasMany(B2bTrackingEvent::class, 'shipment_id')->orderBy('event_type', 'asc');

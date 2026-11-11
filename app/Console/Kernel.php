@@ -24,8 +24,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        // P2-6: keep trade document status in sync with expiry dates.
+        $schedule->command('b2b:documents:expire --days=30')
+            ->dailyAt('01:15')
+            ->withoutOverlapping();
     }
 
     /**

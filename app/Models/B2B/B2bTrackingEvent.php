@@ -17,6 +17,9 @@ class B2bTrackingEvent extends Model
         'event_status',
         'planned_at',
         'actual_at',
+        'timezone',
+        'event_time_local',
+        'actual_at_utc',
         'source',
         'description',
         'evidence_attachment',
@@ -26,6 +29,9 @@ class B2bTrackingEvent extends Model
     protected $casts = [
         'planned_at' => 'datetime',
         'actual_at' => 'datetime',
+        // Wall-clock time in the event's own timezone: return it unwrapped, never with a UTC marker.
+        'event_time_local' => 'datetime:Y-m-d H:i:s',
+        'actual_at_utc' => 'datetime',
     ];
 
     public function shipment()

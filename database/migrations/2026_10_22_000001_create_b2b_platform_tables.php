@@ -161,6 +161,17 @@ return new class extends Migration
                 $table->json('attachments')->nullable();
                 $table->string('status')->default('submitted'); // draft, submitted, under_review, clarification_needed, supplier_responding, quotation_issued, accepted, rejected, expired, converted, closed
                 $table->unsignedInteger('assigned_to')->nullable();
+                $table->unsignedInteger('assigned_by')->nullable();
+                $table->timestamp('assigned_at')->nullable();
+                $table->timestamp('draft_saved_at')->nullable();
+                $table->text('draft_notes')->nullable();
+                $table->string('rfq_type')->default('standard'); // standard, bulk, repeat, stock, sample, sample_stock, sample_bulk, stock_bulk, stock_sample, stock_sample_bulk
+                $table->string('source_channel')->nullable(); // web, whatsapp, store, email, api, other
+                $table->json('dec013_export_offers')->nullable(); // DEC-013: array of supplier offers with price/null, validity, incoterm, lead_time
+                $table->string('dec013_external_id')->nullable(); // DEC-013 supplier/offer external reference
+                $table->unsignedTinyInteger('offer_count')->default(0); // DEC-013 total offers received
+                $table->unsignedTinyInteger('offer_by_supplier')->nullable(); // DEC-013 count of offers from a single supplier
+                $table->text('rejection_reason')->nullable(); // RFQ-stage acceptance/rejection reason
                 $table->timestamps();
                 $table->softDeletes();
             });
@@ -186,6 +197,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('rfq_id')->index();
                 $table->unsignedInteger('supplier_id')->index();
                 $table->unsignedInteger('buyer_id')->index();
+                $table->unsignedInteger('created_by')->nullable()->index();
                 $table->integer('version')->default(1);
                 $table->string('currency', 10)->default('USD');
                 $table->decimal('subtotal', 15, 2)->default(0);

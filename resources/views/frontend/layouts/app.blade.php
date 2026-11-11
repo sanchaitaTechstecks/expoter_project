@@ -626,12 +626,14 @@
                 @endif
             });
 
-            $.post('{{ route('home.section.auction_products') }}', {
-                _token: '{{ csrf_token() }}'
-            }, function(data) {
-                $('#auction_products').html(data);
-                AIZ.plugins.slickCarousel();
-            });
+            @if (addon_is_activated('auction'))
+                $.post('{{ route('home.section.auction_products') }}', {
+                    _token: '{{ csrf_token() }}'
+                }, function(data) {
+                    $('#auction_products').html(data);
+                    AIZ.plugins.slickCarousel();
+                });
+            @endif
 
             var isPreorderEnabled = @json(addon_is_activated('preorder'));
 

@@ -62,5 +62,11 @@ return [
         'channel' => env('PAYTM_CHANNEL'),
         'industry_type' => env('PAYTM_INDUSTRY_TYPE'),
     ],
+    
+    'dahl' => [
+        'api_key' => env('DAHL_API_KEY'),
+        'base_url' => env('DAHL_BASE_URL', 'https://inference.dahl.global/v1'),
+        'model' => env('DAHL_MODEL', 'deepseek-ai/DeepSeek-V4-Flash-0731'),
+    ],
 
 ];

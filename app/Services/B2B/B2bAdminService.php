@@ -141,6 +141,8 @@ class B2bAdminService
 
             $product->publication_status = $publicationStatus;
             $product->published = ($publicationStatus === 'active') ? 1 : 0;
+            // DEC-002: only admin approval marks the product approved.
+            $product->approved = ($publicationStatus === 'active') ? 1 : 0;
             $product->save();
 
             $after = [

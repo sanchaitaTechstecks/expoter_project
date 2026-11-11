@@ -17,6 +17,14 @@ class B2bPayment extends Model
         'supplier_id',
         'amount',
         'currency',
+        'exchange_rate',
+        'base_currency',
+        'base_amount',
+        'transaction_at',
+        'reconciliation_status',
+        'bank_statement_reference',
+        'reconciled_by',
+        'reconciled_at',
         'payment_type',
         'payment_method',
         'transaction_reference',
@@ -37,6 +45,10 @@ class B2bPayment extends Model
         'initiated_at' => 'datetime',
         'received_at' => 'datetime',
         'verified_at' => 'datetime',
+        'exchange_rate' => 'decimal:8',
+        'base_amount' => 'decimal:2',
+        'transaction_at' => 'datetime',
+        'reconciled_at' => 'datetime',
     ];
 
     public function order()
@@ -62,5 +74,10 @@ class B2bPayment extends Model
     public function verifier()
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function reconciler()
+    {
+        return $this->belongsTo(User::class, 'reconciled_by');
     }
 }

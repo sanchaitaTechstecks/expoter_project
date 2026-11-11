@@ -267,10 +267,19 @@ class ExporterLotController extends B2bBaseController
     public function movements($id, Request $request): JsonResponse
     {
         $user = $request->user();
-        $lot = ProductLot::where('supplier_id', $user->id)->find($id);
+        $lot = ProductLot::find($id);
 
         if (!$lot) {
-            return $this->errorResponse('Lot not found or access denied', 404);
+            return $this->errorResponse("Lot {$id} not found", 404);
+        }
+
+        // Movement history is inventory data: only the owning supplier (or back-office) may read it.
+        $isStaff = in_array($user->user_type, ['admin', 'staff'], true);
+        if (!$isStaff && (int) $lot->supplier_id !== (int) $user->id) {
+            return $this->errorResponse(
+                "Lot {$id} ({$lot->lot_code}) belongs to another supplier; its movement history is restricted to the owner",
+                403
+            );
         }
 
         $movements = InventoryMovement::with('actor')

@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api\V1\Exporter;
 
 use App\Http\Controllers\Api\V1\B2bBaseController;
 use App\Models\B2B\B2bContainer;
+use App\Models\B2B\B2bContainerAssignment;
 use App\Models\B2B\B2bOrder;
 use App\Models\B2B\B2bShipment;
+use App\Models\B2B\B2bShipmentEtaRevision;
+use App\Models\B2B\B2bShipmentVehicle;
 use App\Models\B2B\B2bTrackingEvent;
 use App\Services\B2B\B2bTradeService;
 use Illuminate\Http\JsonResponse;
@@ -225,6 +228,14 @@ class ExporterShipmentController extends B2bBaseController
             'status' => 'assigned',
         ]);
 
+        B2bContainerAssignment::create([
+            'container_id' => $container->id,
+            'shipment_id' => $shipment->id,
+            'action' => 'assigned',
+            'actor_id' => $user->id,
+            'notes' => 'Container assigned to shipment ' . $shipment->shipment_number,
+        ]);
+
         return $this->successResponse($container, 'Container added to shipment', 201);
     }
 
@@ -246,6 +257,7 @@ class ExporterShipmentController extends B2bBaseController
             'event_status' => 'required|in:completed,in_progress,scheduled,delayed',
             'actual_at' => 'nullable|date',
             'planned_at' => 'nullable|date',
+            'timezone' => 'nullable|timezone',
             'source' => 'nullable|in:manual,carrier_api,gps',
             'description' => 'nullable|string',
             'evidence_attachment' => 'nullable|string',
@@ -256,6 +268,11 @@ class ExporterShipmentController extends B2bBaseController
             return $this->errorResponse('Validation failed', 422, $validator->errors());
         }
 
+        // P2-5: operational timezone is captured alongside the UTC timestamp so
+        // downstream reports never have to guess the origin timezone.
+        $timezone = $request->timezone ?: config('app.timezone', 'UTC');
+        $actualAt = $request->actual_at ? \Carbon\Carbon::parse($request->actual_at, $timezone) : now();
+
         $event = B2bTrackingEvent::create([
             'shipment_id' => $shipment->id,
             'container_id' => $request->container_id,
@@ -263,7 +280,10 @@ class ExporterShipmentController extends B2bBaseController
             'location' => $request->location,
             'event_status' => $request->event_status,
             'planned_at' => $request->planned_at,
-            'actual_at' => $request->actual_at ?: now(),
+            'actual_at' => $actualAt,
+            'timezone' => $timezone,
+            'event_time_local' => $actualAt->copy()->setTimezone($timezone),
+            'actual_at_utc' => $actualAt->copy()->setTimezone('UTC'),
             'source' => $request->source ?: 'manual', // BR-009 & BR-020: clearly labelled
             'description' => $request->description,
             'evidence_attachment' => $request->evidence_attachment,
@@ -313,5 +333,182 @@ class ExporterShipmentController extends B2bBaseController
         }
 
         return $this->successResponse($event, 'Tracking milestone recorded successfully', 201);
+    }
+
+    /**
+     * P2-5: Revise the ETA and keep the full revision trail.
+     */
+    public function reviseEta($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $shipment = B2bShipment::where('supplier_id', $user->id)->find($id);
+
+        if (!$shipment) {
+            return $this->errorResponse('Shipment not found or access denied', 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'new_eta' => 'required|date',
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        if (in_array($shipment->status, ['delivered', 'cancelled'], true)) {
+            return $this->errorResponse("ETA cannot be revised for a {$shipment->status} shipment", 400);
+        }
+
+        $previous = $shipment->estimated_arrival ? $shipment->estimated_arrival->toDateString() : null;
+
+        $revision = DB::transaction(function () use ($shipment, $request, $user, $previous) {
+            $revision = B2bShipmentEtaRevision::create([
+                'shipment_id' => $shipment->id,
+                'previous_eta' => $previous,
+                'new_eta' => $request->new_eta,
+                'reason' => $request->reason,
+                'revised_by' => $user->id,
+            ]);
+
+            $shipment->estimated_arrival = $request->new_eta;
+            $shipment->save();
+
+            B2bTrackingEvent::create([
+                'shipment_id' => $shipment->id,
+                'event_type' => 'eta_revised',
+                'location' => $shipment->destination_port ?: 'Destination',
+                'event_status' => 'scheduled',
+                'planned_at' => $request->new_eta,
+                'timezone' => config('app.timezone', 'UTC'),
+                'event_time_local' => now(),
+                'actual_at_utc' => now()->setTimezone('UTC'),
+                'source' => 'manual',
+                'description' => 'ETA revised from ' . ($previous ?: 'not set') . ' to ' . $request->new_eta . '. Reason: ' . $request->reason,
+                'created_by' => $user->id,
+            ]);
+
+            return $revision;
+        });
+
+        return $this->successResponse($revision->load('reviser:id,name'), 'Shipment ETA revised successfully', 201);
+    }
+
+    public function etaRevisions($id, Request $request): JsonResponse
+    {
+        $shipment = B2bShipment::where('supplier_id', $request->user()->id)->find($id);
+        if (!$shipment) {
+            return $this->errorResponse('Shipment not found or access denied', 404);
+        }
+
+        $revisions = B2bShipmentEtaRevision::with('reviser:id,name')
+            ->where('shipment_id', $shipment->id)
+            ->orderByDesc('id')
+            ->get();
+
+        return $this->successResponse([
+            'shipment_id' => $shipment->id,
+            'current_eta' => $shipment->estimated_arrival ? $shipment->estimated_arrival->toDateString() : null,
+            'revision_count' => $revisions->count(),
+            'revisions' => $revisions,
+        ], 'Shipment ETA revisions retrieved successfully');
+    }
+
+    /**
+     * P2-5: Assign a vehicle / driver to a shipment.
+     */
+    public function assignVehicle($id, Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $shipment = B2bShipment::where('supplier_id', $user->id)->find($id);
+
+        if (!$shipment) {
+            return $this->errorResponse('Shipment not found or access denied', 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'vehicle_type' => 'nullable|in:truck,trailer,van,rail_wagon,other',
+            'vehicle_number' => 'required|string|max:50',
+            'driver_name' => 'nullable|string|max:191',
+            'driver_phone' => 'nullable|string|max:30',
+            'driver_license' => 'nullable|string|max:100',
+            'capacity' => 'nullable|numeric|min:0',
+            'unit' => 'nullable|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $vehicle = B2bShipmentVehicle::create([
+            'shipment_id' => $shipment->id,
+            'vehicle_type' => $request->vehicle_type,
+            'vehicle_number' => $request->vehicle_number,
+            'driver_name' => $request->driver_name,
+            'driver_phone' => $request->driver_phone,
+            'driver_license' => $request->driver_license,
+            'capacity' => $request->capacity,
+            'unit' => $request->unit ?: 'kg',
+            'status' => 'assigned',
+            'assigned_at' => now(),
+            'actor_id' => $user->id,
+        ]);
+
+        return $this->successResponse($vehicle, 'Vehicle assigned to shipment successfully', 201);
+    }
+
+    public function vehicles($id, Request $request): JsonResponse
+    {
+        $shipment = B2bShipment::where('supplier_id', $request->user()->id)->find($id);
+        if (!$shipment) {
+            return $this->errorResponse('Shipment not found or access denied', 404);
+        }
+
+        return $this->successResponse(
+            B2bShipmentVehicle::where('shipment_id', $shipment->id)->orderByDesc('id')->get(),
+            'Shipment vehicles retrieved successfully'
+        );
+    }
+
+    public function releaseVehicle($id, $vehicleId, Request $request): JsonResponse
+    {
+        $shipment = B2bShipment::where('supplier_id', $request->user()->id)->find($id);
+        if (!$shipment) {
+            return $this->errorResponse('Shipment not found or access denied', 404);
+        }
+
+        $vehicle = B2bShipmentVehicle::where('shipment_id', $shipment->id)->find($vehicleId);
+        if (!$vehicle) {
+            return $this->errorResponse('Vehicle assignment not found', 404);
+        }
+
+        if ($vehicle->status === 'released') {
+            return $this->errorResponse('Vehicle has already been released', 409);
+        }
+
+        $vehicle->status = 'released';
+        $vehicle->released_at = now();
+        $vehicle->actor_id = $request->user()->id;
+        $vehicle->save();
+
+        return $this->successResponse($vehicle, 'Vehicle released successfully');
+    }
+
+    /**
+     * P2-5: Container assignment history for a shipment.
+     */
+    public function containerHistory($id, Request $request): JsonResponse
+    {
+        $shipment = B2bShipment::where('supplier_id', $request->user()->id)->find($id);
+        if (!$shipment) {
+            return $this->errorResponse('Shipment not found or access denied', 404);
+        }
+
+        $history = B2bContainerAssignment::with('container:id,container_number,container_type,status')
+            ->where('shipment_id', $shipment->id)
+            ->orderByDesc('id')
+            ->get();
+
+        return $this->successResponse($history, 'Container assignment history retrieved successfully');
     }
 }

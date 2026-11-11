@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1\Exporter;
 
+use App\Http\Controllers\Api\V1\B2B\Concerns\HandlesAccountSecurity;
 use App\Http\Controllers\Api\V1\B2bBaseController;
 use App\Models\B2B\Company;
 use App\Models\User;
+use App\Services\B2B\B2bAccountSecurityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +14,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ExporterAuthController extends B2bBaseController
 {
+    use HandlesAccountSecurity;
+
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -39,9 +43,13 @@ class ExporterAuthController extends B2bBaseController
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'user_type' => 'seller',
-            'email_verified_at' => now(),
+            // P2-8: email must be verified through a signed token, not auto-trusted.
+            'email_verified_at' => null,
+            'verification_status' => 'unverified',
             'country' => $request->country,
         ]);
+
+        $verificationToken = app(B2bAccountSecurityService::class)->sendVerification($user);
 
         $company = Company::create([
             'user_id' => $user->id,
@@ -71,7 +79,11 @@ class ExporterAuthController extends B2bBaseController
                 'user_type' => $user->user_type,
             ],
             'company' => $company,
-        ], 'Exporter registered successfully', 201);
+            'email_verified' => false,
+            'verification_pending' => true,
+            // Exposed only so automated tests and local setups without SMTP can verify.
+            'verification_token' => app()->environment('local', 'testing') ? $verificationToken : null,
+        ], 'Exporter registered successfully; please verify your email', 201);
     }
 
     public function login(Request $request): JsonResponse
@@ -79,6 +91,7 @@ class ExporterAuthController extends B2bBaseController
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
+            'two_factor_code' => 'nullable|digits:6',
         ]);
 
         if ($validator->fails()) {
@@ -91,7 +104,31 @@ class ExporterAuthController extends B2bBaseController
             return $this->errorResponse('Invalid email or password credentials', 401);
         }
 
+        $security = app(B2bAccountSecurityService::class);
+
+        // P2-8: second factor is mandatory once the user enables TOTP.
+        if ($user->two_factor_enabled) {
+            if (!$request->filled('two_factor_code')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A two-factor authentication code is required',
+                    'errors' => ['two_factor_required' => true],
+                ], 401);
+            }
+
+            if (!$security->verifyTotp($security->currentSecret($user), $request->two_factor_code)) {
+                return $this->errorResponse('Invalid two-factor authentication code', 401);
+            }
+        }
+
+        if ($user->banned) {
+            return $this->errorResponse('This account has been suspended', 403);
+        }
+
         $company = Company::where('user_id', $user->id)->first();
+
+        $user->last_login_at = now();
+        $user->saveQuietly();
 
         $token = $user->createToken('exporter_auth_token')->plainTextToken;
 
@@ -104,6 +141,8 @@ class ExporterAuthController extends B2bBaseController
                 'user_type' => $user->user_type,
             ],
             'company' => $company,
+            'email_verified' => (bool) $user->email_verified_at,
+            'two_factor_enabled' => (bool) $user->two_factor_enabled,
         ], 'Login successful');
     }
 

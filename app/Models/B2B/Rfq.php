@@ -47,12 +47,14 @@ class Rfq extends Model
         'offer_count',
         'offer_by_supplier',
         'rejection_reason',
+        'rejection_code',
     ];
 
     protected $casts = [
         'preferred_lot_ids' => 'array',
         'required_documents' => 'array',
         'attachments' => 'array',
+        'dec013_export_offers' => 'array',
         'requested_quantity' => 'decimal:3',
         'target_price' => 'decimal:2',
         'assigned_at' => 'datetime',
@@ -85,5 +87,10 @@ class Rfq extends Model
     public function quotations()
     {
         return $this->hasMany(B2bQuotation::class, 'rfq_id');
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(RfqInvitation::class, 'rfq_id');
     }
 }

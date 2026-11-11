@@ -54,7 +54,7 @@ class ExporterProductController extends B2bBaseController
             'unit_price' => 'nullable|numeric|min:0',
             'domestic_visibility' => 'nullable|boolean',
             'export_visibility' => 'nullable|boolean',
-            'publication_status' => 'nullable|in:draft,pending_approval,active,inactive,archived',
+            'publication_status' => 'prohibited',
         ]);
 
         if ($validator->fails()) {
@@ -81,12 +81,16 @@ class ExporterProductController extends B2bBaseController
             'min_qty' => $request->min_qty ?: 1,
             'domestic_visibility' => $request->has('domestic_visibility') ? (bool)$request->domestic_visibility : true,
             'export_visibility' => $request->has('export_visibility') ? (bool)$request->export_visibility : true,
-            'publication_status' => $request->publication_status ?: 'active',
-            'published' => 1,
-            'approved' => 1,
+            'publication_status' => 'pending_approval',
+            'published' => 0,
+            'approved' => 0,
         ]);
 
-        return $this->successResponse($product->load('main_category'), 'Product created successfully', 201);
+        return $this->successResponse(
+            $product->load('main_category'),
+            'Product created successfully and submitted for approval',
+            201
+        );
     }
 
     /**
@@ -130,7 +134,10 @@ class ExporterProductController extends B2bBaseController
             'description' => 'nullable|string',
             'domestic_visibility' => 'nullable|boolean',
             'export_visibility' => 'nullable|boolean',
-            'publication_status' => 'nullable|in:draft,pending_approval,active,inactive,archived',
+            // 'publication_status' => 'nullable|in:draft,pending_approval,active,inactive,archived',
+             'publication_status' => 'prohibited',
+             'published' => 'prohibited',
+             'approved' => 'prohibited',
         ]);
 
         if ($validator->fails()) {
@@ -149,9 +156,8 @@ class ExporterProductController extends B2bBaseController
             'description',
             'domestic_visibility',
             'export_visibility',
-            'publication_status',
         ]));
 
-        return $this->successResponse($product, 'Product updated successfully');
+        return $this->successResponse($product,'Product updated successfully');
     }
 }

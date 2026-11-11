@@ -12,9 +12,10 @@
 */
 
 use App\Http\Controllers\AuctionProductController;
-use App\Http\Controllers\AuctionProductBidController;
+// use App\Http\Controllers\AuctionProductBidController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Api\V2\AuctionProductBidController;
 
 //Admin
 Route::group(['prefix' =>'admin', 'middleware' => ['auth', 'admin']], function(){
